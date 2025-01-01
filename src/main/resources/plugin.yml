@@ -1,0 +1,34 @@
+name: server
+version: '0.8-Snapshot'
+main: de.schumacher.server.Server
+author: kajakfrosch
+website: https://github.com/Kajakfrosch/
+api-version: '1.21'
+load: STARTUP
+commands:
+  dynmap:
+    description: Generiert eine Karte der Welt.
+    usage: /dynmap
+    permission: server.dynmap
+    permission-message: You do not have permission!
+  invasion:
+    description: Startet eine Zombie-Invasion!
+    usage: /invasion start <distance> <difficulty>
+  serverstatus:
+    description: Zeigt den aktuellen Zustand des Servers an.
+    usage: /serverstatus
+    permission: server.serverstatus
+    permission-message: You do not have permission!
+permissions:
+  server.dynmap:
+    description: Erlaubt Generierten der Welt Karte -> html
+    default: op
+  server.serverstatus:
+    description: Erlaubt Zeigt den aktuellen Zustand des Servers an.
+    default: op
+  server.*:
+    description: vergibt alle Berechtigungen
+    default: op
+    children:
+      server.dynmap: true
+      server.serverstatus: true
