@@ -87,6 +87,8 @@ public class MapGenerator {
         if (mapImage != null) {
             // Speichern der Karte
             File mapFile = saveMapImage(mapImage);
+            // Erstellen der blocks.txt
+            writeBlocksToFile();
 
             // Erstellen des HTML
             generateHTML(mapFile);
@@ -143,6 +145,7 @@ public class MapGenerator {
                             Color blockColor = blockColors.getOrDefault(blockType, Color.LIGHT_GRAY); // Verwende Standardfarbe
 
                             mapImage.setRGB(pixelX, pixelZ, blockColor.getRGB());
+                            writer.write("Block: " + blockType.name() + " Farbe: " + blockColor.toString() + "\n");
                         }
                     }
                 }
@@ -177,7 +180,64 @@ public class MapGenerator {
         }
         return mapFile;
     }
+    private void writeBlocksToFile() {
+        File blocksFile = new File(plugin.getDataFolder(), "blocks.txt");
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(blocksFile))) {
+            // Header oder initialer Hinweis (optional, kann auch weggelassen werden)
+            writer.write("Blocktyp;x;z");
+            writer.newLine();
 
+            int chunkSize = 16; // Ein Chunk hat 16x16 Blöcke
+
+            // Iteriere über alle Welten
+            for (org.bukkit.World world : Bukkit.getWorlds()) {
+                for (org.bukkit.Chunk chunk : world.getLoadedChunks()) {
+                    int chunkX = chunk.getX() * chunkSize; // Chunk-Koordinaten
+                    int chunkZ = chunk.getZ() * chunkSize;
+
+                    for (int x = 0; x < chunkSize; x++) {
+                        for (int z = 0; z < chunkSize; z++) {
+                            int worldX = chunkX + x;
+                            int worldZ = chunkZ + z;
+
+                            org.bukkit.block.Block surfaceBlock = null;
+                            for (int y = world.getMaxHeight() - 1; y >= world.getMinHeight(); y--) {
+                                org.bukkit.block.Block block = world.getBlockAt(worldX, y, worldZ);
+                                if (block.getType() != org.bukkit.Material.AIR &&
+                                        block.getType() != org.bukkit.Material.BEDROCK &&
+                                        block.getType() != Material.END_STONE &&
+                                        block.getType() != Material.VINE &&
+                                        block.getType() != Material.TALL_GRASS &&
+                                        block.getType() != Material.FIRE &&
+                                        block.getType() != Material.OBSIDIAN) {
+                                    surfaceBlock = block;
+                                    break;
+                                }
+                            }
+
+                            if (surfaceBlock == null) {
+                                continue;
+                            }
+
+                            org.bukkit.Material blockType = surfaceBlock.getType();
+
+                            // Schreibe blocktyp;x;z in die Datei
+                            writer.write(blockType.name() + ";" + worldX + ";" + worldZ);
+                            writer.newLine();
+                        }
+                    }
+                }
+            }
+
+            plugin.getLogger().info("blocks.txt wurde erstellt: " + blocksFile.getAbsolutePath());
+        } catch (IOException e) {
+            plugin.getLogger().severe("Fehler beim Erstellen der blocks.txt: " + e.getMessage());
+            e.printStackTrace();
+        } catch (Exception e) {
+            plugin.getLogger().severe("Ein unerwarteter Fehler ist aufgetreten: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
     private void generateHTML(File mapFile) {
         File htmlFile = new File(plugin.getDataFolder()+"/work", "index.html");
         try (Writer writer = new FileWriter(htmlFile)) {
