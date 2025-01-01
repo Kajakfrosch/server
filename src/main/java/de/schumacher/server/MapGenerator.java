@@ -130,7 +130,11 @@ public class MapGenerator {
                                         block.getType() != Material.VINE &&
                                         block.getType() != Material.TALL_GRASS &&
                                         block.getType() != Material.FIRE &&
-                                        block.getType() != Material.OBSIDIAN) {
+                                        block.getType() != Material.OBSIDIAN&&
+                                        block.getType() != Material.NETHERRACK &&
+                                        block.getType() != Material.NETHER_BRICK &&
+                                        block.getType() != Material.NETHER_PORTAL&&
+                                        block.getType() != Material.BASALT) {
                                     surfaceBlock = block;
                                     break;
                                 }
@@ -209,7 +213,11 @@ public class MapGenerator {
                                         block.getType() != Material.VINE &&
                                         block.getType() != Material.TALL_GRASS &&
                                         block.getType() != Material.FIRE &&
-                                        block.getType() != Material.OBSIDIAN) {
+                                        block.getType() != Material.OBSIDIAN&&
+                                        block.getType() != Material.NETHERRACK &&
+                                        block.getType() != Material.NETHER_BRICK &&
+                                        block.getType() != Material.NETHER_PORTAL&&
+                                        block.getType() != Material.BASALT) {
                                     surfaceBlock = block;
                                     break;
                                 }

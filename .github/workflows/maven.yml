@@ -36,5 +36,5 @@ jobs:
     - name: Upload JAR as Artifact
       uses: actions/upload-artifact@v3 # Lade die erstellte JAR-Datei hoch
       with:
-        name: built-jar # Name des Artefakts
-        path: target/*.jar # Zielpfad (alle JARs aus dem "target/"-Ordner hochladen)
+        name: server-0.8-Snapshot.jar # Name des Artefakts
+        path: target/server-0.8-Snapshot.jar # Zielpfad (alle JARs aus dem "target/"-Ordner hochladen)
