@@ -103,57 +103,70 @@ public class MapGenerator {
             int mapWidth = 1920; // Breite der Karte (kann dynamisch angepasst werden)
             int mapHeight = 1080; // Höhe der Karte (kann dynamisch angepasst werden)
 
+            // Referenz für den Mittelpunkt der Karte (Spawnpunkt der Welt)
+            World world = Bukkit.getWorld("world");
+            if (world == null) {
+                plugin.getLogger().severe("Die Overworld wurde nicht gefunden!");
+                return null;
+            }
+            int spawnX = world.getSpawnLocation().getBlockX();
+            int spawnZ = world.getSpawnLocation().getBlockZ();
+
             BufferedImage mapImage = new BufferedImage(mapWidth, mapHeight, BufferedImage.TYPE_INT_RGB);
 
-            // Iteriere über alle Welten
-            World world = Bukkit.getWorld("world");
-                for (org.bukkit.Chunk chunk : world.getLoadedChunks()) {
-                    int chunkX = chunk.getX() * chunkSize;
-                    int chunkZ = chunk.getZ() * chunkSize;
+            for (org.bukkit.Chunk chunk : world.getLoadedChunks()) {
+                int chunkX = chunk.getX() * chunkSize;
+                int chunkZ = chunk.getZ() * chunkSize;
 
-                    for (int x = 0; x < chunkSize; x++) {
-                        for (int z = 0; z < chunkSize; z++) {
-                            int worldX = chunkX + x;
-                            int worldZ = chunkZ + z;
+                for (int x = 0; x < chunkSize; x++) {
+                    for (int z = 0; z < chunkSize; z++) {
+                        int worldX = chunkX + x; // Absoluter X-Wert in der Welt
+                        int worldZ = chunkZ + z; // Absoluter Z-Wert in der Welt
 
-                            // Fallback: Standardfarbe
-                            int pixelX = (worldX % mapWidth + mapWidth) % mapWidth;
-                            int pixelZ = (worldZ % mapHeight + mapHeight) % mapHeight;
+                        // Berechne Pixelkoordinaten relativ zum Spawnpunkt
+                        int pixelX = (mapWidth / 2) + (worldX - spawnX); // X-Achse relativ zum Spawn
+                        int pixelZ = (mapHeight / 2) + (worldZ - spawnZ); // Z-Achse relativ zum Spawn
 
-                            mapImage.setRGB(pixelX, pixelZ, Color.LIGHT_GRAY.getRGB());
-
-                            org.bukkit.block.Block surfaceBlock = null;
-                            for (int y = world.getMaxHeight() - 1; y >= world.getMinHeight(); y--) {
-                                org.bukkit.block.Block block = world.getBlockAt(worldX, y, worldZ);
-                                if (block.getType() != org.bukkit.Material.AIR &&
-                                        block.getType() != org.bukkit.Material.BEDROCK &&
-                                        block.getType() != Material.END_STONE &&
-                                        block.getType() != Material.VINE &&
-                                        block.getType() != Material.TALL_GRASS &&
-                                        block.getType() != Material.FIRE &&
-                                        block.getType() != Material.OBSIDIAN&&
-                                        block.getType() != Material.NETHERRACK &&
-                                        block.getType() != Material.NETHER_BRICK &&
-                                        block.getType() != Material.NETHER_PORTAL&&
-                                        block.getType() != Material.BASALT) {
-                                    surfaceBlock = block;
-                                    break;
-                                }
-                            }
-
-                            if (surfaceBlock == null) {
-                                continue;
-                            }
-
-                            org.bukkit.Material blockType = surfaceBlock.getType();
-                            // Hole Farbe
-                            Color blockColor = blockColors.getOrDefault(blockType, Color.LIGHT_GRAY); // Verwende Standardfarbe
-
-                            mapImage.setRGB(pixelX, pixelZ, blockColor.getRGB());
-                            //writer.write("Block: " + blockType.name() + " Farbe: " + blockColor.toString() + "\n");
+                        // Bereich prüfen: Überspringe, wenn die Koordinaten außerhalb der Kartengröße liegen
+                        if (pixelX < 0 || pixelX >= mapWidth || pixelZ < 0 || pixelZ >= mapHeight) {
+                            continue;
                         }
-                    }
 
+                        // Standardfarbe setzen
+                        mapImage.setRGB(pixelX, pixelZ, Color.LIGHT_GRAY.getRGB());
+
+                        // Suche den obersten sichtbaren Block (Y von oben nach unten durchsuchen)
+                        org.bukkit.block.Block surfaceBlock = null;
+                        for (int y = world.getMaxHeight() - 1; y >= world.getMinHeight(); y--) {
+                            org.bukkit.block.Block block = world.getBlockAt(worldX, y, worldZ);
+                            if (block.getType() != Material.AIR &&
+                                    block.getType() != Material.BEDROCK &&
+                                    block.getType() != Material.END_STONE &&
+                                    block.getType() != Material.VINE &&
+                                    block.getType() != Material.TALL_GRASS &&
+                                    block.getType() != Material.FIRE &&
+                                    block.getType() != Material.OBSIDIAN &&
+                                    block.getType() != Material.NETHERRACK &&
+                                    block.getType() != Material.NETHER_BRICK &&
+                                    block.getType() != Material.NETHER_PORTAL &&
+                                    block.getType() != Material.BASALT) {
+                                surfaceBlock = block;
+                                break;
+                            }
+                        }
+
+                        if (surfaceBlock == null) {
+                            continue;
+                        }
+
+                        // Hole Farbe basierend auf dem Blocktyp
+                        org.bukkit.Material blockType = surfaceBlock.getType();
+                        Color blockColor = blockColors.getOrDefault(blockType, Color.LIGHT_GRAY);
+
+                        // Setze die Farbe auf der Karte
+                        mapImage.setRGB(pixelX, pixelZ, blockColor.getRGB());
+                    }
+                }
             }
 
             plugin.getLogger().info("Blocks.txt erstellt: " + blocksFile.getAbsolutePath());
