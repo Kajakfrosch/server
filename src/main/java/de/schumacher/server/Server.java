@@ -9,6 +9,12 @@ import org.bukkit.plugin.java.JavaPlugin;
 public final class Server extends JavaPlugin {
 
     private MapGenerator mapGenerator;
+    private DebugLogger debugLogger;
+    private ServerPerformanceMonitor serverPerformanceMonitor;
+    private PlayerPositionExporter playerPositionExporter;
+    private InvasionCommand invasionCommand;
+    private ServerStatusCommand serverStatusCommand;
+    private BackupCommand backupCommand;
 
     @Override
     public void onEnable() {
@@ -16,11 +22,12 @@ public final class Server extends JavaPlugin {
         this.saveDefaultConfig();
         // Initialisiere den MapGenerator
         mapGenerator = new MapGenerator(this);
+
         // Initialisiere Performance-Monitor mit Config
         ServerPerformanceMonitor.initialize(this.getConfig());
         // Initialisiere Debugging
         DebugLogger.initialize(this.getConfig());
-
+        getCommand("backup").setExecutor(new BackupCommand(this));
         // Beispiel-Nutzung
         DebugLogger.log("INFO", "Server Plugin wird aktiviert...");
         DebugLogger.log("DEBUG", "Dies ist eine Debug-Nachricht.");

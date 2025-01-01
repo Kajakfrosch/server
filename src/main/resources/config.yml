@@ -33,3 +33,7 @@ invasion:
 debug:
   enabled: false
   log_level: "INFO"
+# Backup
+backup:
+  path: "/opt/sicherungen" # Standard-Speicherort für Sicherungen
+  password: "DeinPasswort123" # Passwort für die Verschlüsselung

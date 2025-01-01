@@ -19,9 +19,16 @@ commands:
     usage: /serverstatus
     permission: server.serverstatus
     permission-message: You do not have permission!
+  backup:
+    description: Erstellt ein tar.gz-Backup des Minecraft-Ordners.
+    usage: /backup
+    permission: server.backup.create
 permissions:
   server.dynmap:
     description: Erlaubt Generierten der Welt Karte -> html
+    default: op
+  server.backup.create:
+    description: Berechtigung, um Backups zu erstellen.
     default: op
   server.serverstatus:
     description: Erlaubt Zeigt den aktuellen Zustand des Servers an.
