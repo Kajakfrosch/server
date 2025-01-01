@@ -119,6 +119,96 @@ debug:
 #### 2. Installation
 1. **JAR-Datei hochladen:** Lade die Datei `server-0.8-Snapshot.jar` in den Plugin-Ordner deines Servers hoch.
 2. **Konfigurationsdateien:** Starte den Server, um automatisch die `config.yml` und andere notwendige Dateien zu erstellen.
+## **Apache Webserver für die Weltkarte einrichten**
+Um die Weltkarte auf deinem Server sicher zugänglich zu machen, kannst du Apache mit SSL-Unterstützung konfigurieren. Nachfolgend findest du eine allgemeine Anleitung ohne spezifische Domain.
+### **1. Apache-Installation und Grundkonfiguration**
+1. Installiere Apache:
+``` bash
+   sudo apt update
+   sudo apt install apache2
+```
+1. Starte den Dienst und aktiviere ihn:
+``` bash
+   sudo systemctl start apache2
+   sudo systemctl enable apache2
+```
+1. Installiere Certbot, um ein kostenloses SSL-Zertifikat (Let's Encrypt) zu beantragen:
+``` bash
+   sudo apt install python3-certbot-apache
+```
+1. Generiere das SSL-Zertifikat:
+``` bash
+   sudo certbot --apache
+```
+1. Stelle sicher, dass deine Firewall Port 80 (HTTP) und Port 443 (HTTPS) für Apache zulässt:
+``` bash
+   sudo ufw allow 'Apache Full'
+   sudo ufw reload
+```
+### **2. Beispiel für eine Apache-SSL-Konfigurationsdatei**
+Speichere folgenden Inhalt in der Datei **`/etc/apache2/sites-available/ssl.conf`**:
+``` apache
+<VirtualHost *:80>
+    ServerName your-domain.com
+    Redirect / https://your-domain.com/
+
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+    RewriteEngine on
+    RewriteCond %{SERVER_NAME} =your-domain.com
+    RewriteRule ^ https://%{SERVER_NAME}%{REQUEST_URI} [END,NE,R=permanent]
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName your-domain.com
+    DocumentRoot "/var/www/map/"
+
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+    SSLCertificateFile /etc/letsencrypt/live/your-domain.com/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/your-domain.com/privkey.pem
+    Include /etc/letsencrypt/options-ssl-apache.conf
+</VirtualHost>
+```
+**Achtung:** Ersetze **`your-domain.com`** mit der Domain deines Servers oder deiner öffentlichen IP-Adresse, falls du keine Domain hast.
+### **3. Schritte zur Einrichtung der Karte**
+1. Erstelle das Verzeichnis für die Karte:
+``` bash
+   sudo mkdir /var/www/map
+```
+1. Verlinke die generierten Plugin-Dateien in das Webserver-Verzeichnis:
+``` bash
+   sudo ln -s /opt/minecraft/plugins/server/work/index.html /var/www/map/index.html
+   sudo ln -s /opt/minecraft/plugins/server/work/map.png /var/www/map/map.png
+```
+### **4. Apache-Konfiguration aktivieren**
+1. Aktiviere die neue SSL-Konfiguration:
+``` bash
+   sudo a2ensite ssl.conf
+```
+1. Lade Apache neu, um alle Änderungen zu übernehmen:
+``` bash
+   sudo systemctl reload apache2
+```
+1. Teste die Konfiguration und den Status von Apache:
+``` bash
+   sudo apache2ctl configtest
+   sudo systemctl status apache2
+```
+### **5. Zugriff testen**
+1. Im Browser:
+   Rufe die HTTPS-Adresse deines Servers (z. B. `https://your-domain.com`) auf.
+   Falls keine Domain eingestellt ist, kannst du auf die Server-IP-Adresse zugreifen, indem du den Port 443 (HTTPS) verwendest.
+
+### **Hinweise**
+- Wenn du eine öffentliche Domain verwendest, stelle sicher, dass die DNS-Einträge korrekt gesetzt sind.
+- Zertifikate von Let's Encrypt haben eine Laufzeit von 90 Tagen. Nutze einen Cronjob, um diese automatisiert zu erneuern:
+``` bash
+   sudo certbot renew --quiet
+```
+Mit diesen Schritten kannst du die Weltkarte sicher über einen Browser zugänglich machen! 🚀
 
 #### 3. Nutzung
 - **Automatische Karten Generierung:** Die Karte wird von allein aktualisiert, sobald Spieler beitreten oder die Welt gespeichert wird.
