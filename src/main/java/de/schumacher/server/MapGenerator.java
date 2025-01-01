@@ -2,6 +2,7 @@ package de.schumacher.server;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import javax.imageio.ImageIO;
@@ -105,7 +106,7 @@ public class MapGenerator {
             BufferedImage mapImage = new BufferedImage(mapWidth, mapHeight, BufferedImage.TYPE_INT_RGB);
 
             // Iteriere über alle Welten
-            for (org.bukkit.World world : Bukkit.getWorlds()) {
+            World world = Bukkit.getWorld("world");
                 for (org.bukkit.Chunk chunk : world.getLoadedChunks()) {
                     int chunkX = chunk.getX() * chunkSize;
                     int chunkZ = chunk.getZ() * chunkSize;
@@ -152,7 +153,7 @@ public class MapGenerator {
                             //writer.write("Block: " + blockType.name() + " Farbe: " + blockColor.toString() + "\n");
                         }
                     }
-                }
+
             }
 
             plugin.getLogger().info("Blocks.txt erstellt: " + blocksFile.getAbsolutePath());
@@ -194,7 +195,7 @@ public class MapGenerator {
             int chunkSize = 16; // Ein Chunk hat 16x16 Blöcke
 
             // Iteriere über alle Welten
-            for (org.bukkit.World world : Bukkit.getWorlds()) {
+            World world = Bukkit.getWorld("world");
                 for (org.bukkit.Chunk chunk : world.getLoadedChunks()) {
                     int chunkX = chunk.getX() * chunkSize; // Chunk-Koordinaten
                     int chunkZ = chunk.getZ() * chunkSize;
@@ -235,7 +236,7 @@ public class MapGenerator {
                         }
                     }
                 }
-            }
+
 
             plugin.getLogger().info("blocks.txt wurde erstellt: " + blocksFile.getAbsolutePath());
         } catch (IOException e) {
