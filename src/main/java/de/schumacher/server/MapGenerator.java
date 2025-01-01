@@ -149,7 +149,7 @@ public class MapGenerator {
                             Color blockColor = blockColors.getOrDefault(blockType, Color.LIGHT_GRAY); // Verwende Standardfarbe
 
                             mapImage.setRGB(pixelX, pixelZ, blockColor.getRGB());
-                            writer.write("Block: " + blockType.name() + " Farbe: " + blockColor.toString() + "\n");
+                            //writer.write("Block: " + blockType.name() + " Farbe: " + blockColor.toString() + "\n");
                         }
                     }
                 }
