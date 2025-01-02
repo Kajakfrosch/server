@@ -15,7 +15,8 @@ public final class Server extends JavaPlugin {
     private InvasionCommand invasionCommand;
     private ServerStatusCommand serverStatusCommand;
     private BackupCommand backupCommand;
-
+    private Thread tomcatThread;
+    private EmbeddedTomcatServer tomcatServer;
     @Override
     public void onEnable() {
         // Standard-Konfiguration laden, falls nicht vorhanden
@@ -38,12 +39,57 @@ public final class Server extends JavaPlugin {
         // Generiere die Karte beim Start des Plugins
         getLogger().info("Server Plugin aktiviert!");
         mapGenerator.generateMap();
+        //ini Tomcat
+        // Konfiguration für den Embedded Tomcat
+        boolean isTomcatEnabled = this.getConfig().getBoolean("tomcat.enabled", false);
+        int httpPort = this.getConfig().getInt("tomcat.http_port", 8080);
+        int httpsPort = this.getConfig().getInt("tomcat.https_port", 8443);
+
+        // Warnung: Embedded Tomcat ist nicht für Produktionsumgebungen geeignet
+        if (isTomcatEnabled) {
+            System.err.println("WARNUNG: Der eingebettete Tomcat-Server ist nicht für den Produktionsbetrieb geeignet!");
+            System.err.println("Bitte verwenden Sie einen externen Tomcat, Nginx oder Apache HTTPD für Ihre Anwendung.");
+            // Tomcat starten
+            tomcatServer = new EmbeddedTomcatServer(httpPort, this.getDataFolder().getAbsolutePath().replace("\\", "/") + "/work");
+            tomcatThread = new Thread(() -> {
+                try {
+                    tomcatServer.start();
+                } catch (Exception e) {
+                    System.err.println("Fehler beim Start des eingebetteten Tomcat-Servers:");
+                    e.printStackTrace();
+                }
+            });
+
+            tomcatThread.setDaemon(true);
+            tomcatThread.start();
+            System.out.println("Tomcat wird im Hintergrund gestartet...");
+        } else {
+            System.out.println("Tomcat-Server ist deaktiviert. Start wird übersprungen.");
+        }
 
     }
 
     @Override
     public void onDisable() {
+
+        // Stoppe den Tomcat-Server
+        if (tomcatServer != null) {
+            tomcatServer.stop();
+        }
+
+        // Warte darauf, dass der Thread beendet wird
+        if (tomcatThread != null && tomcatThread.isAlive()) {
+            tomcatThread.interrupt();
+            try {
+                tomcatThread.join();
+            } catch (InterruptedException e) {
+                System.err.println("Fehler beim Warten auf das Beenden des Tomcat-Threads:");
+                e.printStackTrace();
+            }
+        }
+
         getLogger().info("Server Plugin deaktiviert!");
+
     }
 
 

@@ -33,6 +33,11 @@ invasion:
 debug:
   enabled: false
   log_level: "INFO"
+# Allgemeine Tomcat-Einstellungen
+tomcat:
+  enabled: true               # Ob der Tomcat-Server gestartet werden soll
+  http_port: 8080             # HTTP-Port des Tomcat-Servers
+  https_port: 8443            # HTTPS-Port des Tomcat-Servers
 # Backup
 backup:
   path: "/opt/sicherungen" # Standard-Speicherort für Sicherungen
