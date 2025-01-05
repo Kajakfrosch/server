@@ -6,6 +6,12 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+
 public final class Server extends JavaPlugin {
 
     private MapGenerator mapGenerator;
@@ -17,15 +23,25 @@ public final class Server extends JavaPlugin {
     private BackupCommand backupCommand;
     private Thread tomcatThread;
     private EmbeddedTomcatServer tomcatServer;
+    private DatabaseManager databaseManager;
     @Override
     public void onEnable() {
         // Standard-Konfiguration laden, falls nicht vorhanden
         this.saveDefaultConfig();
-        // Initialisiere den MapGenerator
-        mapGenerator = new MapGenerator(this);
+        // Ordner des Plugins
+        File dataFolder = getDataFolder();
+        if (!dataFolder.exists()) {
+            dataFolder.mkdirs();
+        }
 
+        // SQLite-Datenbank verbinden
+        databaseManager = new DatabaseManager(dataFolder);
+        databaseManager.connect();
+        // Initialisiere den MapGenerator
+        mapGenerator = new MapGenerator(this,databaseManager);
         // Initialisiere Performance-Monitor mit Config
         ServerPerformanceMonitor.initialize(this.getConfig());
+        extractTemplateIfNotExists();
         // Initialisiere Debugging
         DebugLogger.initialize(this.getConfig());
         getCommand("backup").setExecutor(new BackupCommand(this));
@@ -110,6 +126,37 @@ public final class Server extends JavaPlugin {
             return true;
         }
         return false;
+    }
+    public void extractTemplateIfNotExists() {
+        // Ziel-Ordner, wo die Templates hinkopiert werden sollen
+        File workFolder = new File(this.getDataFolder(), "templates");
+        if (!workFolder.exists()) {
+            workFolder.mkdirs();
+        }
+
+        // Ziel-Datei (index.html im Arbeitsordner)
+        File targetFile = new File(workFolder, "index.html");
+
+        // Template-Pfad innerhalb der .jar (aus resources/templates)
+        String templatePath = "/templates/index.html";
+
+        if (!targetFile.exists()) {
+            try (InputStream input = getClass().getResourceAsStream(templatePath)) {
+                if (input == null) {
+                    this.getLogger().severe("Template konnte nicht aus der .jar geladen werden: " + templatePath);
+                    return;
+                }
+
+                // Kopiere Template in das Arbeitsverzeichnis
+                Files.copy(input, targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                this.getLogger().info("Template wurde erfolgreich in den Arbeitsordner kopiert: " + targetFile.getAbsolutePath());
+            } catch (IOException e) {
+                this.getLogger().severe("Fehler beim Extrahieren des Templates: " + e.getMessage());
+                e.printStackTrace();
+            }
+        } else {
+            this.getLogger().info("Template existiert bereits: " + targetFile.getAbsolutePath());
+        }
     }
 
 
