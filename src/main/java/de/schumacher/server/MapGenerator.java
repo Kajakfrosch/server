@@ -416,51 +416,134 @@ public class MapGenerator {
             return null;
         }
     }
-    private void generateMapFromDatabase() {
-        BufferedImage mapImage = new BufferedImage(1920, 1080, BufferedImage.TYPE_INT_RGB);
-        int spawnX, spawnZ;
+//    private void generateMapFromDatabase() {
+//        BufferedImage mapImage = new BufferedImage(1920, 1080, BufferedImage.TYPE_INT_RGB);
+//        int spawnX, spawnZ;
+//
+//        try {
+//            World world = Bukkit.getWorld("world");
+//            if (world == null) {
+//                plugin.getLogger().severe("Die Welt wurde nicht gefunden!");
+//                return;
+//            }
+//            spawnX = world.getSpawnLocation().getBlockX();
+//            spawnZ = world.getSpawnLocation().getBlockZ();
+//
+//            String querySQL = "SELECT block_x, block_z, block_type FROM blocks " +
+//                    "JOIN rendered_chunks ON blocks.rendered_chunk_id = rendered_chunks.id " +
+//                    "WHERE rendered_chunks.world_name = ?";
+//            try (PreparedStatement stmt = getPersistentConnection().prepareStatement(querySQL)) {
+//                stmt.setString(1, world.getName());
+//                ResultSet resultSet = stmt.executeQuery();
+//
+//                while (resultSet.next()) {
+//                    int blockX = resultSet.getInt("block_x");
+//                    int blockZ = resultSet.getInt("block_z");
+//                    String blockType = resultSet.getString("block_type");
+//
+//                    int pixelX = (1920 / 2) + (blockX - spawnX);
+//                    int pixelZ = (1080 / 2) + (blockZ - spawnZ);
+//
+//                    if (pixelX >= 0 && pixelX < mapImage.getWidth() && pixelZ >= 0 && pixelZ < mapImage.getHeight()) {
+//                        Material material = Material.getMaterial(blockType);
+//                        if (material != null) {
+//                            Color color = blockColors.getOrDefault(material, Color.LIGHT_GRAY);
+//                            mapImage.setRGB(pixelX, pixelZ, color.getRGB());
+//                        }
+//                    }
+//                }
+//
+//                ImageIO.write(mapImage, "png", new File(plugin.getDataFolder(), "/work/map.png"));
+//                plugin.getLogger().info("Die Karte wurde erfolgreich aus der Datenbank generiert und gespeichert!");
+//            }
+//        } catch (Exception e) {
+//            plugin.getLogger().severe("Fehler beim Generieren der Karte aus der Datenbank: " + e.getMessage());
+//            e.printStackTrace();
+//        }
+//    }
+private void generateMapFromDatabase() {
+    int minX = Integer.MAX_VALUE, minZ = Integer.MAX_VALUE;
+    int maxX = Integer.MIN_VALUE, maxZ = Integer.MIN_VALUE;
+    int chunkSize = 16; // Ein Chunk ist 16x16 Blöcke
 
-        try {
-            World world = Bukkit.getWorld("world");
-            if (world == null) {
-                plugin.getLogger().severe("Die Welt wurde nicht gefunden!");
+    try {
+        World world = Bukkit.getWorld("world");
+        if (world == null) {
+            plugin.getLogger().severe("Die Welt wurde nicht gefunden!");
+            return;
+        }
+
+        String queryBoundsSQL = "SELECT MIN(block_x) AS min_x, MIN(block_z) AS min_z, MAX(block_x) AS max_x, MAX(block_z) AS max_z " +
+                "FROM blocks " +
+                "JOIN rendered_chunks ON blocks.rendered_chunk_id = rendered_chunks.id " +
+                "WHERE rendered_chunks.world_name = ?";
+        try (PreparedStatement stmt = getPersistentConnection().prepareStatement(queryBoundsSQL)) {
+            stmt.setString(1, world.getName());
+            ResultSet resultSet = stmt.executeQuery();
+
+            if (resultSet.next()) {
+                minX = resultSet.getInt("min_x");
+                minZ = resultSet.getInt("min_z");
+                maxX = resultSet.getInt("max_x");
+                maxZ = resultSet.getInt("max_z");
+            } else {
+                plugin.getLogger().warning("Keine Daten gefunden, Karte nicht generiert.");
                 return;
             }
-            spawnX = world.getSpawnLocation().getBlockX();
-            spawnZ = world.getSpawnLocation().getBlockZ();
+        }
 
-            String querySQL = "SELECT block_x, block_z, block_type FROM blocks " +
-                    "JOIN rendered_chunks ON blocks.rendered_chunk_id = rendered_chunks.id " +
-                    "WHERE rendered_chunks.world_name = ?";
-            try (PreparedStatement stmt = getPersistentConnection().prepareStatement(querySQL)) {
-                stmt.setString(1, world.getName());
-                ResultSet resultSet = stmt.executeQuery();
+        // Berechnung der PNG-Größe
+        int width = (maxX - minX) + 1; // Breite in Blöcken
+        int height = (maxZ - minZ) + 1; // Höhe in Blöcken
 
-                while (resultSet.next()) {
-                    int blockX = resultSet.getInt("block_x");
-                    int blockZ = resultSet.getInt("block_z");
-                    String blockType = resultSet.getString("block_type");
+        // Optional: Vergrößerung der Karte für bessere Sichtbarkeit (z. B. 1 Block = 2 Pixel)
+        int scaleFactor = 2;
+        BufferedImage mapImage = new BufferedImage(width * scaleFactor, height * scaleFactor, BufferedImage.TYPE_INT_RGB);
 
-                    int pixelX = (1920 / 2) + (blockX - spawnX);
-                    int pixelZ = (1080 / 2) + (blockZ - spawnZ);
+        // Zeichengesperre auf den Spawn-Punkt ausrichten
+        int spawnX = world.getSpawnLocation().getBlockX();
+        int spawnZ = world.getSpawnLocation().getBlockZ();
 
-                    if (pixelX >= 0 && pixelX < mapImage.getWidth() && pixelZ >= 0 && pixelZ < mapImage.getHeight()) {
-                        Material material = Material.getMaterial(blockType);
-                        if (material != null) {
-                            Color color = blockColors.getOrDefault(material, Color.LIGHT_GRAY);
-                            mapImage.setRGB(pixelX, pixelZ, color.getRGB());
+        String queryBlocksSQL = "SELECT block_x, block_z, block_type FROM blocks " +
+                "JOIN rendered_chunks ON blocks.rendered_chunk_id = rendered_chunks.id " +
+                "WHERE rendered_chunks.world_name = ?";
+        try (PreparedStatement stmt = getPersistentConnection().prepareStatement(queryBlocksSQL)) {
+            stmt.setString(1, world.getName());
+            ResultSet resultSet = stmt.executeQuery();
+
+            while (resultSet.next()) {
+                int blockX = resultSet.getInt("block_x");
+                int blockZ = resultSet.getInt("block_z");
+                String blockType = resultSet.getString("block_type");
+
+                // Pixelkoordinaten bestimmen (verschoben für den minimierten Bereich)
+                int pixelX = (blockX - minX) * scaleFactor;
+                int pixelZ = (blockZ - minZ) * scaleFactor;
+
+                Material material = Material.valueOf(blockType);
+                Color color = blockColors.getOrDefault(material, Color.LIGHT_GRAY);
+
+                // Bereiche ausfüllen (pro Block mehrere Pixel, falls scaleFactor > 1)
+                for (int dx = 0; dx < scaleFactor; dx++) {
+                    for (int dz = 0; dz < scaleFactor; dz++) {
+                        if (pixelX + dx < mapImage.getWidth() && pixelZ + dz < mapImage.getHeight()) {
+                            mapImage.setRGB(pixelX + dx, pixelZ + dz, color.getRGB());
                         }
                     }
                 }
-
-                ImageIO.write(mapImage, "png", new File(plugin.getDataFolder(), "/work/map.png"));
-                plugin.getLogger().info("Die Karte wurde erfolgreich aus der Datenbank generiert und gespeichert!");
             }
-        } catch (Exception e) {
-            plugin.getLogger().severe("Fehler beim Generieren der Karte aus der Datenbank: " + e.getMessage());
-            e.printStackTrace();
         }
+
+        // Karte als PNG speichern
+        File outputFile = new File(plugin.getDataFolder(), "/work/map.png");
+        ImageIO.write(mapImage, "png", outputFile);
+        plugin.getLogger().info("Die Karte wurde dynamisch basierend auf geladenen Chunks erstellt: " + outputFile.getAbsolutePath());
+
+    } catch (Exception e) {
+        plugin.getLogger().severe("Fehler beim Generieren der Karte: " + e.getMessage());
+        e.printStackTrace();
     }
+}
     private void initializeDatabase() {
         String createRenderedChunksTable = "CREATE TABLE IF NOT EXISTS rendered_chunks (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
