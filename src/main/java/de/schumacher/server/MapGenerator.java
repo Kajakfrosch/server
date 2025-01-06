@@ -28,6 +28,7 @@ public class MapGenerator {
     private final Server plugin;
     private final Map<Material, Color> blockColors;
     private DatabaseManager databaseManager;
+    private boolean isRendering = false;
     public MapGenerator(Server plugin,DatabaseManager databaseManager) {
         this.plugin = plugin;
         this.databaseManager = databaseManager;
@@ -45,80 +46,138 @@ public class MapGenerator {
     }
 
     private void initializeBlockColors() {
-        blockColors.put(Material.OAK_LEAVES, new Color(93, 161, 48));
-        blockColors.put(Material.SHORT_GRASS, new Color(124, 252, 0));
-        blockColors.put(Material.GRASS_BLOCK, new Color(50, 205, 50));
-        blockColors.put(Material.BIRCH_LEAVES, new Color(166, 200, 102));
-        blockColors.put(Material.SPRUCE_LEAVES, new Color(72, 107, 79));
-        blockColors.put(Material.LARGE_FERN, new Color(34, 139, 34));
-        blockColors.put(Material.WATER, new Color(70, 130, 180));
-        blockColors.put(Material.SAND, new Color(244, 164, 96));
-        blockColors.put(Material.TALL_SEAGRASS, new Color(46, 139, 87));
-        blockColors.put(Material.SEAGRASS, new Color(0, 100, 0));
-        blockColors.put(Material.POPPY, new Color(255, 64, 64));
-        blockColors.put(Material.DANDELION, new Color(254, 216, 93));
-        blockColors.put(Material.DIORITE, new Color(237, 237, 237));
-        blockColors.put(Material.STONE, new Color(169, 169, 169));
-        blockColors.put(Material.GRAVEL, new Color(182, 182, 182));
-        blockColors.put(Material.FERN, new Color(86, 125, 70));
-        blockColors.put(Material.PEONY, new Color(255, 192, 203));
-        blockColors.put(Material.SWEET_BERRY_BUSH, new Color(139, 0, 0));
-        blockColors.put(Material.ANDESITE, new Color(205, 205, 192));
-        blockColors.put(Material.GRANITE, new Color(214, 140, 128));
-        blockColors.put(Material.DARK_OAK_LOG, new Color(47, 30, 21));
-        blockColors.put(Material.WHITE_WALL_BANNER, new Color(255, 255, 255));
-        blockColors.put(Material.DARK_OAK_FENCE, new Color(59, 42, 28));
-        blockColors.put(Material.TORCH, new Color(255, 215, 0));
-        blockColors.put(Material.DARK_OAK_PLANKS, new Color(75, 58, 41));
-        blockColors.put(Material.KELP, new Color(1, 50, 32));
-        blockColors.put(Material.DIRT, new Color(139, 69, 19));
-        blockColors.put(Material.WHITE_WOOL, new Color(250, 240, 230));
-        blockColors.put(Material.DARK_OAK_SLAB, new Color(59, 42, 28));
-        blockColors.put(Material.DARK_OAK_STAIRS, new Color(59, 42, 28));
-        blockColors.put(Material.CORNFLOWER, new Color(100, 149, 237));
-        blockColors.put(Material.AZURE_BLUET, new Color(240, 255, 255));
-        blockColors.put(Material.OXEYE_DAISY, new Color(255, 255, 255));
-        blockColors.put(Material.SUGAR_CANE, new Color(0, 155, 119));
-        blockColors.put(Material.PUMPKIN, new Color(255, 117, 24));
-        blockColors.put(Material.DIRT_PATH, new Color(139, 90, 43));
-        blockColors.put(Material.SANDSTONE, new Color(243, 229, 171));
-        blockColors.put(Material.OAK_STAIRS, new Color(210, 180, 140));
-        blockColors.put(Material.OAK_TRAPDOOR, new Color(160, 82, 45));
-        blockColors.put(Material.COBBLESTONE_STAIRS, new Color(128, 128, 128));
-        blockColors.put(Material.OAK_PLANKS, new Color(222, 184, 135));
-        blockColors.put(Material.OAK_FENCE, new Color(193, 154, 107));
-        blockColors.put(Material.ICE, new Color(176, 224, 230));
-        blockColors.put(Material.SNOW, new Color(255, 255, 255));
-        blockColors.put(Material.PACKED_ICE, new Color(173, 216, 230));
-        blockColors.put(Material.COPPER_ORE, new Color(184, 115, 51));
-        blockColors.put(Material.BUBBLE_COLUMN, new Color(152, 245, 255));
-        blockColors.put(Material.COAL_ORE, new Color(54, 69, 79));
-        blockColors.put(Material.SNOW_BLOCK, new Color(255, 255, 255));
-        blockColors.put(Material.NETHERRACK, new Color(165, 42, 42));
-        blockColors.put(Material.RED_MUSHROOM, new Color(155, 17, 30));
-        blockColors.put(Material.BROWN_MUSHROOM, new Color(139, 69, 19));
-        blockColors.put(Material.IRON_BARS, new Color(138, 138, 138));
+        blockColors.put(Material.GRASS_BLOCK, new Color(34, 139, 34)); // Dunkles Grasgrün
+        blockColors.put(Material.SHORT_GRASS, new Color(124, 252, 0)); // Hellgrün
+        blockColors.put(Material.DIRT_PATH, new Color(181, 101, 29)); // Erde-ähnliches Braun
+        blockColors.put(Material.OAK_LEAVES, new Color(85, 107, 47)); // Dunkles Olivgrün
+        blockColors.put(Material.STRIPPED_OAK_WOOD, new Color(194, 178, 128)); // Hellbraun
+        blockColors.put(Material.DANDELION, new Color(255, 223, 0)); // Leuchtendes Gelb
+        blockColors.put(Material.AZURE_BLUET, new Color(175, 238, 238)); // Hellblau-cyan
+        blockColors.put(Material.OAK_STAIRS, new Color(160, 82, 45)); // Mittleres Braun
+        blockColors.put(Material.OXEYE_DAISY, new Color(255, 255, 255)); // Weiß
+        blockColors.put(Material.OAK_PLANKS, new Color(222, 184, 135)); // Leicht rötliches Holzbraun
+        blockColors.put(Material.COBBLESTONE, new Color(128, 128, 128)); // Grau für Stein
+        blockColors.put(Material.MOSSY_COBBLESTONE, new Color(107, 142, 35)); // Moosgrün
+        blockColors.put(Material.OAK_FENCE, new Color(184, 134, 11)); // Braun-gelb
+        blockColors.put(Material.OAK_FENCE_GATE, new Color(184, 134, 11)); // Selbes Gelbbraun
+        blockColors.put(Material.POPPY, new Color(255, 0, 0)); // Knallrot
+        blockColors.put(Material.TORCH, new Color(255, 165, 0)); // Feuerorange
+        blockColors.put(Material.CRAFTING_TABLE, new Color(139, 69, 19)); // Dunkleres Holz
+        blockColors.put(Material.POTATOES, new Color(210, 180, 140)); // Erdfarben
+        blockColors.put(Material.WHEAT, new Color(255, 223, 0)); // Gelber Farbton
+        blockColors.put(Material.COMPOSTER, new Color(160, 82, 45)); // Dunkelbraun
+        blockColors.put(Material.WATER, new Color(70, 130, 180)); // Blau
+        blockColors.put(Material.AIR, new Color(0, 0, 0, 0)); // Transparent (schwarz mit 0 Alpha)
+        blockColors.put(Material.BEETROOTS, new Color(152, 0, 0)); // Tiefrot
+        blockColors.put(Material.ACACIA_LEAVES, new Color(100, 149, 85)); // Gräuliches Grün
+        blockColors.put(Material.BASALT, new Color(112, 128, 144)); // Dunkleres Grau-Blau
+        blockColors.put(Material.OBSIDIAN, new Color(37, 28, 44)); // Fast Schwarz/Lila
+        blockColors.put(Material.TALL_GRASS, new Color(34, 139, 34)); // Dunkelgrün
+        blockColors.put(Material.STONE, new Color(112, 128, 144)); // Grau
+        blockColors.put(Material.CORNFLOWER, new Color(25, 25, 112)); // Dunkelblau
+        blockColors.put(Material.WHITE_BANNER, new Color(255, 255, 255)); // Weiß
+        blockColors.put(Material.CHEST, new Color(139, 69, 19)); // Holzbraun
+        blockColors.put(Material.FURNACE, new Color(169, 169, 169)); // Hellgrau
+        blockColors.put(Material.BOOKSHELF, new Color(139, 69, 19)); // Holzbraun
+        blockColors.put(Material.ENCHANTING_TABLE, new Color(72, 61, 139)); // Dunkellila
+        blockColors.put(Material.BREWING_STAND, new Color(211, 211, 211)); // Hellgrau
+        blockColors.put(Material.ACACIA_PLANKS, new Color(205, 92, 92)); // Warm-rotbraun
+        blockColors.put(Material.OAK_TRAPDOOR, new Color(184, 134, 11)); // Braun
+        blockColors.put(Material.RED_BED, new Color(178, 34, 34)); // Dunkelrot
+        blockColors.put(Material.JUNGLE_LOG, new Color(139, 69, 19)); // Dunkelbraun
+        blockColors.put(Material.DAMAGED_ANVIL, new Color(105, 105, 105)); // Dunkelgrau
+        blockColors.put(Material.BIRCH_LEAVES, new Color(166, 200, 102)); // Grünlich
+        blockColors.put(Material.BAMBOO, new Color(124, 252, 0)); // Knalliges Grün
+        blockColors.put(Material.ANDESITE, new Color(205, 205, 192)); // Hellgrau
+        blockColors.put(Material.GRANITE, new Color(214, 140, 128)); // Rötlich
+        blockColors.put(Material.COPPER_ORE, new Color(184, 115, 51)); // Kupferbraun
+        blockColors.put(Material.DIRT, new Color(139, 69, 19)); // Dunkelbraun
+        blockColors.put(Material.SUGAR_CANE, new Color(144, 238, 144)); // Hellgrün
+        blockColors.put(Material.COAL_ORE, new Color(54, 54, 54)); // Schwarzgrau
+        blockColors.put(Material.GRAVEL, new Color(169, 169, 169)); // Dunkleres Hellgrau
+        blockColors.put(Material.SEAGRASS, new Color(0, 100, 0)); // Tiefgrün
+        blockColors.put(Material.COCOA, new Color(139, 69, 19)); // Brauton
+        blockColors.put(Material.CARROTS, new Color(255, 165, 0)); // Orange
+        blockColors.put(Material.SAND, new Color(244, 164, 96)); // Sandfarben
+        blockColors.put(Material.SANDSTONE, new Color(243, 229, 171)); // Helles Gelb/Braun
+        blockColors.put(Material.TALL_SEAGRASS, new Color(34, 139, 34)); // Grün
+        blockColors.put(Material.BAMBOO_PLANKS, new Color(154, 205, 50)); // Grüngelb
+        blockColors.put(Material.ATTACHED_PUMPKIN_STEM, new Color(46, 139, 87)); // Grün
+        blockColors.put(Material.PUMPKIN, new Color(255, 140, 0)); // Orange
+        blockColors.put(Material.PUMPKIN_STEM, new Color(34, 139, 34)); // Grün
+        blockColors.put(Material.CACTUS, new Color(50, 205, 50)); // Sattes Grün
+        blockColors.put(Material.MELON, new Color(154, 205, 50)); // Helles, saftiges Grün
+        blockColors.put(Material.ATTACHED_MELON_STEM, new Color(46, 139, 87)); // Grün
+        blockColors.put(Material.JUNGLE_LEAVES, new Color(85, 107, 47)); // Dunkler Grünton
+        blockColors.put(Material.CLAY, new Color(211, 211, 211)); // Hellgrau
+        blockColors.put(Material.DIORITE, new Color(237, 237, 237)); // Quarzfarben
+        blockColors.put(Material.IRON_ORE, new Color(184, 134, 11)); // Rostfarben
+        blockColors.put(Material.JUNGLE_SAPLING, new Color(85, 107, 47)); // Dunkelgrün
+        blockColors.put(Material.MAGMA_BLOCK, new Color(255, 69, 0)); // Feuriges Rot-Orange
+        blockColors.put(Material.ACACIA_LOG, new Color(205, 133, 63)); // Mittelbraun
+        blockColors.put(Material.OAK_LOG, new Color(139, 69, 19)); // Dunkles Braun
+        blockColors.put(Material.ROSE_BUSH, new Color(255, 0, 0)); // Rot
+        blockColors.put(Material.ALLIUM, new Color(218, 112, 214)); // Helllila
+        blockColors.put(Material.LILAC, new Color(219, 112, 147)); // Rosa-Lila
     }
 
     public void generateMap() {
-        BufferedImage mapImage = null;
-        // Speichern der Karte
-        File mapFile = processBlocks();
-        // Erstellen der blocks.txt
-        // Erstellen des HTML
-        generateHTML();
+        if(isRendering != true) {
+            isRendering = true;
+            BufferedImage mapImage = null;
+            // Speichern der Karte
+            File mapFile = processBlocks();
+            // Erstellen der blocks.txt
+            // Erstellen des HTML
+            generateHTML();
+            isRendering = false;
+        }else {plugin.getLogger().info("Server is rendering ");};
 
     }
     public void generateMapFull() {
-        BufferedImage mapImage = null;
-        // Speichern der Karte
-        File mapFile = processBlocksFull();
-        // Erstellen der blocks.txt
-        // Erstellen des HTML
-        generateHTML();
+        if(isRendering != true) {
+            isRendering = true;
+            BufferedImage mapImage = null;
+            // Speichern der Karte
+            File mapFile = processBlocksFull();
+            // Erstellen der blocks.txt
+            // Erstellen des HTML
+            generateHTML();
+            isRendering = false;
+        }
+        else {plugin.getLogger().info("Server is rendering ");};
+    }
+    public void dropAllTables() {
+        try (PreparedStatement dropBlocksStmt = getPersistentConnection().prepareStatement("DROP TABLE IF EXISTS blocks");
+             PreparedStatement dropChunksStmt = getPersistentConnection().prepareStatement("DROP TABLE IF EXISTS rendered_chunks")) {
+
+            dropBlocksStmt.executeUpdate();
+            dropChunksStmt.executeUpdate();
+            plugin.getLogger().info("Alle Tabellen erfolgreich aus der Datenbank gelöscht.");
+
+        } catch (SQLException e) {
+            plugin.getLogger().severe("Fehler beim Löschen der Tabellen aus der Datenbank: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    public void rebuildDatabaseAndRerender() {
+        if(isRendering != true) {
+            isRendering = true;
+            // 1. Lösche alle Tabellen
+            dropAllTables();
+
+            // 2. Initialisiere die Tabellen neu
+            initializeDatabase();
+
+            // 3. Render alle Chunks neu
+            generateMapFull();
+
+            plugin.getLogger().info("Die Datenbank wurde neu erstellt und alle Chunks wurden neu gerendert.");
+            isRendering = false;
+        }
+        else {plugin.getLogger().info("Server is rendering ");};
 
     }
-
     private File processBlocksFull() {
         File blocksFile = new File(plugin.getDataFolder(), "blocks.txt");
 
@@ -140,6 +199,13 @@ public class MapGenerator {
                     plugin.getLogger().info("Überspringe bereits gerenderten Chunk: X=" + chunk.getX() + ", Z=" + chunk.getZ());
                     continue; // Überspringe diesen Chunk
                 }
+                try {
+                    // Warte 1 Sekunde (1 Sekunde = 1000 Millisekunden)
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    // Fehlerbehandlung, falls der Thread unterbrochen wird
+                    e.printStackTrace();
+                }
                 plugin.getLogger().info("Rendere Chunk: X=" + chunk.getX() + ", Z=" + chunk.getZ());
 
                 int chunkX = chunk.getX() * 16;
@@ -147,6 +213,7 @@ public class MapGenerator {
 
                 for (int x = 0; x < 16; x++) {
                     for (int z = 0; z < 16; z++) {
+
                         int worldX = chunkX + x;
                         int worldZ = chunkZ + z;
 
@@ -155,7 +222,7 @@ public class MapGenerator {
                                 new Location(world, worldX + 0.5, world.getMaxHeight(), worldZ + 0.5), // Startpunkt
                                 new Vector(0, -1, 0), // Richtung (von oben nach unten)
                                 world.getMaxHeight(), // Reichweite
-                                FluidCollisionMode.NEVER // Ignoriert Flüssigkeiten (Wasser, Lava)
+                                FluidCollisionMode.ALWAYS // Beinhaltet Flüssigkeiten (Wasser, Lava)
                         )).getHitBlock();
 
                         if (surfaceBlock != null) {

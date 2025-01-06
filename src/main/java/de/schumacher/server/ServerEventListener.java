@@ -56,12 +56,5 @@ public class ServerEventListener implements Listener {
             Bukkit.getLogger().info(ChatColor.RED + "Warnung: Der Server ist überlastet!");
         }else {mapGenerator.generateMap();}
     }
-    @EventHandler
-    public void ChunkLoadEvent(WorldSaveEvent event){
-        if (ServerPerformanceMonitor.isServerOverloaded()) {
-           // Bukkit.broadcastMessage(ChatColor.RED + "Warnung: Der Server ist überlastet!");
-            Bukkit.getLogger().info(ChatColor.RED + "Warnung: Der Server ist überlastet!");
-        }else {mapGenerator.generateMap();        }
 
-    }
 }

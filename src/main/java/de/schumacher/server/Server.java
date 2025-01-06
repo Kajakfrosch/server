@@ -12,6 +12,25 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 
+/**
+ * Main class for the Server plugin implementation.
+ * This class manages the lifecycle of the plugin, initializes components, and handles commands and events.
+ * It also provides an embedded Tomcat server and map generation functionality.
+ *
+ * The plugin is built for a Minecraft Spigot server and handles features such as server performance monitoring,
+ * database management, generated maps, and player export capabilities.
+ *
+ * The server plugin automatically initializes required components, manages configurations,
+ * registers command executors, and handles the lifecycle events during enabling and disabling states.
+ *
+ * Functionalities include:
+ * - Map generation via the {@code MapGenerator}.
+ * - Debugging through the {@code DebugLogger}.
+ * - Player export management.
+ * - Command handling for backup, invasion, and server status.
+ * - Embedded Tomcat server management.
+ * - Handling the `/dynmap` command for generating or re-rendering maps.
+ */
 public final class Server extends JavaPlugin {
 
     private MapGenerator mapGenerator;
@@ -123,22 +142,62 @@ public final class Server extends JavaPlugin {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (command.getName().equalsIgnoreCase("dynmap")) {
+            // Nur Spieler mit Operator-Berechtigungen dürfen den Befehl ausführen
             if (sender instanceof Player && !sender.isOp()) {
                 sender.sendMessage("Du hast keine Berechtigung, diesen Befehl auszuführen!");
                 return true;
             }
 
-            sender.sendMessage("Karte wird erstellt...");
-            sender.sendMessage("Dieser Vorgang kann einige Zeit dauern, bitte warten...");
-            sender.sendMessage("Es kann zu Laggs fürhren");
+            // Kein Argument - Hinweis ausgeben
+            if (args.length == 0) {
+                sender.sendMessage("Verwendung: /dynmap [fullrender|rerender|render]");
+                return true;
+            }
 
+            // Argumente auswerten
+            String action = args[0].toLowerCase();
+            if (action.equals("render")) {
+                sender.sendMessage("Starte vollständiges Rendern der Karte...");
+                sender.sendMessage("Dieser Vorgang kann einige Zeit dauern, bitte warten...");
+                sender.sendMessage("Es kann zu Laggs führen.");
+
+                // Async-Task für fullrender
                 Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
-                    mapGenerator.generateMapFull();
-
+                    mapGenerator.generateMap(); // Karte vollständig rendern
+                    sender.sendMessage("Vollständiges Rendern abgeschlossen!");
                 });
+                return true;
 
-            sender.sendMessage("Karte erfolgreich erstellt!");
-            return true;
+            }
+            if (action.equals("fullrender")) {
+                sender.sendMessage("Starte vollständiges Rendern der Karte...");
+                sender.sendMessage("Dieser Vorgang kann einige Zeit dauern, bitte warten...");
+                sender.sendMessage("Es kann zu Laggs führen.");
+
+                // Async-Task für fullrender
+                Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
+                    mapGenerator.generateMapFull(); // Karte vollständig rendern
+                    sender.sendMessage("Vollständiges Rendern abgeschlossen!");
+                });
+                return true;
+
+            } else if (action.equals("rerender")) {
+                sender.sendMessage("Setze die Datenbank zurück und starte erneutes Rendern...");
+                sender.sendMessage("Dieser Vorgang wird alle bisherigen Daten löschen!");
+
+                // Async-Task für rerender
+                Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
+                    mapGenerator.rebuildDatabaseAndRerender(); // Datenbank löschen und neu rendern
+                    sender.sendMessage("Erneutes Rendern abgeschlossen!");
+                });
+                return true;
+
+            } else {
+                // Unbekannter Befehl
+                sender.sendMessage("Unbekannter Befehl: " + action);
+                sender.sendMessage("Verwendung: /dynmap [fullrender|rerender]");
+                return true;
+            }
         }
         return false;
     }
