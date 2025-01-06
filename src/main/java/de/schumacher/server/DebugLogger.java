@@ -3,6 +3,11 @@ package de.schumacher.server;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 
+/**
+ * The DebugLogger class is used for managing and controlling logging operations within the application.
+ * It allows configurable debug and log levels through an external configuration file.
+ * Logs are outputted to the server console depending on the current log level.
+ */
 public class DebugLogger {
 
     private static boolean enabled = false; // Standardwert

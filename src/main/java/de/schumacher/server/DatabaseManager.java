@@ -15,6 +15,11 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+/**
+ * The DatabaseManager class is responsible for managing the connection to
+ * an SQLite database for a Minecraft plugin. It provides methods to establish
+ * and terminate a database connection, as well as access the active connection.
+ */
 public class DatabaseManager {
 
     private Connection connection;

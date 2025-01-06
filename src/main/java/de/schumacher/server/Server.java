@@ -109,6 +109,17 @@ public final class Server extends JavaPlugin {
     }
 
 
+    /**
+     * Executes the specified command when it is triggered by a sender. This method processes the "dynmap"
+     * command to generate a map asynchronously.
+     *
+     * @param sender The entity (e.g., player, console) that issued the command.
+     * @param command The command that was executed.
+     * @param label The alias of the command that was used.
+     * @param args The arguments passed along with the command.
+     * @return true if the command was successfully executed and should not be passed to other handlers;
+     *         false if the command is not recognized or should be handled elsewhere.
+     */
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (command.getName().equalsIgnoreCase("dynmap")) {
@@ -118,11 +129,15 @@ public final class Server extends JavaPlugin {
             }
 
             sender.sendMessage("Karte wird erstellt...");
-            Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
-                mapGenerator.generateMap();
-                sender.sendMessage("Karte erfolgreich erstellt!");
-            });
+            sender.sendMessage("Dieser Vorgang kann einige Zeit dauern, bitte warten...");
+            sender.sendMessage("Es kann zu Laggs fürhren");
 
+                Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
+                    mapGenerator.generateMapFull();
+
+                });
+
+            sender.sendMessage("Karte erfolgreich erstellt!");
             return true;
         }
         return false;

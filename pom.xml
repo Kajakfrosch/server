@@ -6,7 +6,7 @@
 
     <groupId>de.schumacher</groupId>
     <artifactId>server</artifactId>
-    <version>0.8-Snapshot</version>
+    <version>1.0-Stable</version>
     <packaging>jar</packaging>
 
     <name>server</name>

@@ -18,6 +18,11 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * The MapGenerator class is responsible for generating a dynamic map and its associated HTML output
+ * within a Minecraft plugin. It integrates with a provided Server instance and a DatabaseManager
+ * to manage data related to chunk and block rendering, as well as player information and map persistence.
+ */
 public class MapGenerator {
 
     private final Server plugin;
@@ -32,6 +37,11 @@ public class MapGenerator {
         initializeBlockColors();
         // Initialisiere die Tabellen
         initializeDatabase();
+    }
+    public void reloadMapandHTML() {
+        plugin.getLogger().info("Map wird erneut generiert...");
+        generateHTML();
+        generateMapFromDatabase();
     }
 
     private void initializeBlockColors() {
@@ -96,11 +106,78 @@ public class MapGenerator {
         File mapFile = processBlocks();
         // Erstellen der blocks.txt
         // Erstellen des HTML
-        generateHTML(mapFile);
+        generateHTML();
+
+    }
+    public void generateMapFull() {
+        BufferedImage mapImage = null;
+        // Speichern der Karte
+        File mapFile = processBlocksFull();
+        // Erstellen der blocks.txt
+        // Erstellen des HTML
+        generateHTML();
 
     }
 
-    public void generateHTML(File mapFile) {
+    private File processBlocksFull() {
+        File blocksFile = new File(plugin.getDataFolder(), "blocks.txt");
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(blocksFile))) {
+            World world = Bukkit.getWorld("world");
+            if (world == null) {
+                plugin.getLogger().severe("Die Welt wurde nicht gefunden!");
+                return null;
+            }
+
+            List<Block> blockList = new ArrayList<>();
+
+
+
+            for (Chunk chunk : world.getLoadedChunks()) {
+
+
+                if (isChunkRendered(chunk)) {
+                    plugin.getLogger().info("Überspringe bereits gerenderten Chunk: X=" + chunk.getX() + ", Z=" + chunk.getZ());
+                    continue; // Überspringe diesen Chunk
+                }
+                plugin.getLogger().info("Rendere Chunk: X=" + chunk.getX() + ", Z=" + chunk.getZ());
+
+                int chunkX = chunk.getX() * 16;
+                int chunkZ = chunk.getZ() * 16;
+
+                for (int x = 0; x < 16; x++) {
+                    for (int z = 0; z < 16; z++) {
+                        int worldX = chunkX + x;
+                        int worldZ = chunkZ + z;
+
+                        // Finde den obersten sichtbaren Block
+                        Block surfaceBlock = Objects.requireNonNull(world.rayTraceBlocks(
+                                new Location(world, worldX + 0.5, world.getMaxHeight(), worldZ + 0.5), // Startpunkt
+                                new Vector(0, -1, 0), // Richtung (von oben nach unten)
+                                world.getMaxHeight(), // Reichweite
+                                FluidCollisionMode.NEVER // Ignoriert Flüssigkeiten (Wasser, Lava)
+                        )).getHitBlock();
+
+                        if (surfaceBlock != null) {
+                            blockList.add(surfaceBlock);
+                        }
+                    }
+                }
+
+                saveChunkAndBlocksToDatabase(chunk, blockList);
+
+            }
+
+            generateMapFromDatabase();
+            return blocksFile;
+
+        } catch (IOException e) {
+            plugin.getLogger().severe("Fehler beim Verarbeiten von Blöcken: " + e.getMessage());
+            return null;
+        }
+    }
+
+    public void generateHTML() {
         // Arbeitsordner und Template-Datei
         File workFolder = new File(plugin.getDataFolder(), "work");
         if (!workFolder.exists()) {
@@ -121,9 +198,8 @@ public class MapGenerator {
         plugin.getLogger().info("HTML-Datei erfolgreich erstellt: " + outputFile.getAbsolutePath());
     }
 
-    private File processBlocks() {
+    private synchronized File processBlocks() {
         File blocksFile = new File(plugin.getDataFolder(), "blocks.txt");
-
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(blocksFile))) {
             World world = Bukkit.getWorld("world");
@@ -133,17 +209,26 @@ public class MapGenerator {
             }
 
             List<Block> blockList = new ArrayList<>();
+            int chunkCounter = 0; // Zähler für die Anzahl der verarbeiteten Chunks
+            final int MAX_CHUNKS_PER_RUN = 10; // Maximale Anzahl Chunks pro Lauf
+
             for (Chunk chunk : world.getLoadedChunks()) {
+                if (chunkCounter >= MAX_CHUNKS_PER_RUN) {
+                    plugin.getLogger().info("Die maximale Anzahl von "+ MAX_CHUNKS_PER_RUN+ "Chunks wurde in diesem Durchlauf erreicht.");
+                    break; // Breche die Schleife, wenn das Limit erreicht ist
+                }
+
                 if (isChunkRendered(chunk)) {
                     plugin.getLogger().info("Überspringe bereits gerenderten Chunk: X=" + chunk.getX() + ", Z=" + chunk.getZ());
                     continue; // Überspringe diesen Chunk
                 }
+                plugin.getLogger().info("Rendere Chunk: X=" + chunk.getX() + ", Z=" + chunk.getZ());
+
                 int chunkX = chunk.getX() * 16;
                 int chunkZ = chunk.getZ() * 16;
 
                 for (int x = 0; x < 16; x++) {
                     for (int z = 0; z < 16; z++) {
-
                         int worldX = chunkX + x;
                         int worldZ = chunkZ + z;
 
@@ -157,13 +242,14 @@ public class MapGenerator {
 
                         if (surfaceBlock != null) {
                             blockList.add(surfaceBlock);
-
                         }
                     }
                 }
-                saveChunkAndBlocksToDatabase(chunk,blockList);
 
+                saveChunkAndBlocksToDatabase(chunk, blockList);
+                chunkCounter++; // Erhöhe den Zähler nach der Verarbeitung des Chunks
             }
+
             generateMapFromDatabase();
             return blocksFile;
 

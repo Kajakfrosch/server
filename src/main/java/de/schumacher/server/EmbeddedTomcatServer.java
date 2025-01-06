@@ -18,6 +18,11 @@ import java.security.KeyStore;
 import java.security.cert.X509Certificate;
 
 
+/**
+ * The EmbeddedTomcatServer class provides a lightweight wrapper around the Apache Tomcat
+ * server enabling embedded use within Java applications. It is designed for serving web
+ * content from a specified directory and supports both HTTP and HTTPS configurations.
+ */
 public class EmbeddedTomcatServer {
 
     private final int port;
