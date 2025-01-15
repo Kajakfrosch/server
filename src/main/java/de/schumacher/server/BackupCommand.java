@@ -14,6 +14,44 @@ import java.util.zip.GZIPOutputStream;
 
 import static org.apache.commons.io.FileUtils.deleteDirectory;
 
+/**
+ * The BackupCommand class implements the functionality for creating a backup
+ * of the Minecraft server's world and relevant files. This command is triggered
+ * by server operators and facilitates generating a compressed archive of the
+ * server data.
+ *
+ * The backup includes copying the server's main directory, creating a temporary
+ * copy of files, compressing them into a .tar.gz archive, and handling temporary
+ * resources cleanup. It also ensures proper server save states during the
+ * backup process.
+ *
+ * Constructor:
+ * - Takes in an instance of {@link JavaPlugin} for accessing server configurations
+ *   and world data.
+ *
+ * The `onCommand` method:
+ * - Verifies the sender's permissions (OP status).
+ * - Retrieves the backup directory path from the plugin configuration.
+ * - Creates a timestamped .tar.gz backup file.
+ * - Copies the server data to a temporary directory.
+ * - Archives the data to the target file.
+ * - Deletes temporary files after completion.
+ * - Sends appropriate feedback to the command sender about success or failure.
+ *
+ * Private Utility Methods:
+ * - `copyDirectory`: Recursively copies files and directories from the server
+ *   directory to a temporary directory.
+ * - `createTarGz`: Compresses the temporary backup data into a .tar.gz file and
+ *   manages temporary server save commands.
+ * - `addFilesToTarGz`: Populates the tar.gz archive with files and directories
+ *   recursively.
+ *
+ * The backup path is loaded from the plugin's configuration under the key
+ * `backup.path`. If the directory does not exist, it will attempt to create
+ * the required folders.
+ *
+ * Errors during the backup process are caught and reported to the sender.
+ */
 public class BackupCommand implements CommandExecutor {
 
     private final JavaPlugin plugin; // Referenz zum Plugin für Zugriff auf Serverdaten und Config

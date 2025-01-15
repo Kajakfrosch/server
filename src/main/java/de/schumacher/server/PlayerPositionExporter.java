@@ -7,6 +7,19 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
+/**
+ * The PlayerPositionExporter class provides functionality to export the positions
+ * of all online players in the server to a specified output file.
+ *
+ * This is useful for logging, debugging, or external processing of player locations.
+ * Each player's data is written in the format:
+ * playerName:x-coordinate:y-coordinate:z-coordinate
+ *
+ * The file will be overwritten if it already exists.
+ *
+ * Note: This class includes basic exception handling for IO operations
+ * and logs any encountered errors to the console.
+ */
 public class PlayerPositionExporter {
     public static void exportPlayerPositions(File outputFile) {
         try (FileWriter writer = new FileWriter(String.valueOf(outputFile))) {

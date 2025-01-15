@@ -1,5 +1,5 @@
 name: server
-version: '0.8-Snapshot'
+version: '1.0-stabil'
 main: de.schumacher.server.Server
 author: kajakfrosch
 website: https://github.com/Kajakfrosch/

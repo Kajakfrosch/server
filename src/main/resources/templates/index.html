@@ -1,0 +1,39 @@
+<!--
+  ~ Copyright (c) 2025. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+  ~ Morbi non lorem porttitor neque feugiat blandit. Ut vitae ipsum eget quam lacinia accumsan.
+  ~ Etiam sed turpis ac ipsum condimentum fringilla. Maecenas magna.
+  ~ Proin dapibus sapien vel ante. Aliquam erat volutpat. Pellentesque sagittis ligula eget metus.
+  ~ Vestibulum commodo. Ut rhoncus gravida arcu.
+  -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Map</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+        }
+        img {
+            max-width: 90%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+<h1>Server Map</h1>
+<img src="map.png" alt="Map">
+<div class="stats">
+    <h2>Server Statistics</h2>
+    <p><strong>Online Players:</strong> [[${totalPlayers}]]</p>
+    <div class="players">
+        <h3>Player Names:</h3>
+        <p>[[${playersList}]]</p>
+    </div>
+</div>
+</body>
+</html>

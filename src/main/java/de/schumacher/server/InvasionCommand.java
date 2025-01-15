@@ -17,6 +17,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+/**
+ * The {@code InvasionCommand} class implements a custom command that allows
+ * players to start and stop zombie invasions in a Minecraft server world.
+ * The invasion parameters such as distance, difficulty, and spawn rate
+ * can be adjusted through a configuration file. Players can earn rewards
+ * for successfully defending against invasions, and penalties may be applied
+ * for failing to defend.
+ *
+ * This command is registered through the server plugin instance and provides
+ * both `/invasion start` and `/invasion stop` commands. It manages active
+ * invasions on a per-player basis and dynamically spawns zombies based on
+ * the provided settings.
+ */
 public class InvasionCommand implements CommandExecutor {
 
     private final Server plugin;
